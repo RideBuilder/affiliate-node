@@ -1,0 +1,37 @@
+{
+  "name": "@ridebuilder/affiliate",
+  "version": "0.4.0",
+  "description": "Server-side SDK for RideBuilder FirstParty affiliate tracking: capture click_id and send checkout/return postbacks.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "ridebuilder",
+    "affiliate",
+    "attribution",
+    "postback"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  }
+}
