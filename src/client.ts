@@ -71,6 +71,11 @@ function assertPositiveAmount(value: number, field: string): void {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     throw new RideBuilderError(`${field} must be a positive number`, { retryable: false });
   }
+  // Reject more than 2 decimal places, matching the other SDKs and the NUMERIC(12,2) wire contract — a
+  // computed float like 19.99*3 would otherwise be serialized verbatim and skew the commission basis.
+  if (Math.abs(value * 100 - Math.round(value * 100)) > 1e-9) {
+    throw new RideBuilderError(`${field} must have at most 2 decimal places`, { retryable: false });
+  }
 }
 
 function assertCurrency(value: string): void {
