@@ -29,7 +29,16 @@
     "attribution",
     "postback"
   ],
-  "license": "UNLICENSED",
+  "author": "RideBuilder",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RideBuilder/Backend.git",
+    "directory": "Services/AffiliateNetwork/sdk/node"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "typescript": "^5.4.0"
