@@ -1,0 +1,37 @@
+[
+  {
+    "name": "verify 401 throws a terminal invalid_auth error",
+    "call": "verify",
+    "args": {},
+    "client": { "apiKey": "bad-key", "maxRetries": 0 },
+    "response": { "status": 401, "body": { "error": "invalid_auth" } },
+    "expect": {
+      "request": { "method": "GET", "path": "/integration/verify" },
+      "error": { "retryable": false, "status": 401, "errorCode": "invalid_auth" }
+    }
+  },
+  {
+    "name": "checkout 413 throws a terminal payload_too_large error",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "response": { "status": 413, "body": { "error": "payload_too_large" } },
+    "expect": {
+      "error": { "retryable": false, "status": 413, "errorCode": "payload_too_large" }
+    }
+  },
+  {
+    "name": "checkout with an invalid click_id throws before any HTTP call",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "not-a-uuid" },
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "expect": { "argError": true, "requestCount": 0 }
+  },
+  {
+    "name": "checkout with an over-precise subtotal throws before any HTTP call",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.999, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "expect": { "argError": true, "requestCount": 0 }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "retries once on 500 then succeeds",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 3 },
+    "responses": [ { "status": 500 }, { "status": 202 } ],
+    "expect": { "requestCount": 2, "result": { "accepted": true, "status": 202 } }
+  },
+  {
+    "name": "retries once on 429 then succeeds",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 3 },
+    "responses": [ { "status": 429 }, { "status": 202 } ],
+    "expect": { "requestCount": 2, "result": { "accepted": true, "status": 202 } }
+  },
+  {
+    "name": "does not retry on a 400",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 3 },
+    "responses": [ { "status": 400, "body": { "error": "bad_request" } } ],
+    "expect": { "requestCount": 1, "error": { "retryable": false, "status": 400, "errorCode": "bad_request" } }
+  }
+]

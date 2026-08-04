@@ -1,0 +1,59 @@
+[
+  {
+    "name": "register posts type/environment/version/capabilities and returns the integration id",
+    "call": "register",
+    "args": {},
+    "client": { "apiKey": "test-key", "environment": "sandbox", "maxRetries": 0 },
+    "response": { "status": 200, "body": { "integrationId": "int_abc", "status": "connected" } },
+    "expect": {
+      "request": {
+        "method": "POST",
+        "path": "/integration/register",
+        "body": {
+          "type": "<sdk_type>",
+          "environment": "sandbox",
+          "version": "<sdk_version>",
+          "capabilities": ["click_capture", "order_events", "refund_events"]
+        }
+      },
+      "result": { "integrationId": "int_abc", "status": "connected" }
+    }
+  },
+  {
+    "name": "verify GETs /integration/verify and resolves ok on 200",
+    "call": "verify",
+    "args": {},
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "response": { "status": 200, "body": { "status": "connected", "retailerId": "r1" } },
+    "expect": {
+      "request": { "method": "GET", "path": "/integration/verify" },
+      "result": { "ok": true, "status": 200 }
+    }
+  },
+  {
+    "name": "heartbeat posts type/environment/version to /integration/heartbeat",
+    "call": "heartbeat",
+    "args": {},
+    "client": { "apiKey": "test-key", "environment": "production", "maxRetries": 0 },
+    "response": { "status": 200, "body": { "ok": true } },
+    "expect": {
+      "request": {
+        "method": "POST",
+        "path": "/integration/heartbeat",
+        "body": { "type": "<sdk_type>", "environment": "production", "version": "<sdk_version>" }
+      },
+      "result": { "ok": true, "status": 200 }
+    }
+  },
+  {
+    "name": "healthCheck posts to /postback/health (legacy alias)",
+    "call": "healthCheck",
+    "args": {},
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "response": { "status": 200, "body": { "ok": true } },
+    "expect": {
+      "request": { "method": "POST", "path": "/postback/health" },
+      "result": { "ok": true, "status": 200 }
+    }
+  }
+]

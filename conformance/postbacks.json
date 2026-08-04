@@ -1,0 +1,44 @@
+[
+  {
+    "name": "reportCheckout posts snake_case body and returns accepted",
+    "call": "reportCheckout",
+    "args": { "orderId": "ORDER-1", "subtotal": 199.99, "currency": "USD", "clickId": "1e8e6c0a-1111-4111-8111-111111111111" },
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "response": { "status": 202 },
+    "expect": {
+      "request": {
+        "method": "POST",
+        "path": "/postback/checkout",
+        "headers": { "authorization": "Bearer test-key" },
+        "body": {
+          "order_id": "ORDER-1",
+          "order_subtotal": 199.99,
+          "currency": "USD",
+          "ref": "ridebuilder",
+          "click_id": "1e8e6c0a-1111-4111-8111-111111111111"
+        }
+      },
+      "result": { "accepted": true, "status": 202 }
+    }
+  },
+  {
+    "name": "reportReturn posts snake_case body with no click_id",
+    "call": "reportReturn",
+    "args": { "returnId": "RET-1", "orderId": "ORDER-1", "refundAmount": 49.95, "currency": "USD" },
+    "client": { "apiKey": "test-key", "maxRetries": 0 },
+    "response": { "status": 202 },
+    "expect": {
+      "request": {
+        "method": "POST",
+        "path": "/postback/return",
+        "body": {
+          "return_id": "RET-1",
+          "order_id": "ORDER-1",
+          "refund_amount": 49.95,
+          "currency": "USD"
+        }
+      },
+      "result": { "accepted": true, "status": 202 }
+    }
+  }
+]

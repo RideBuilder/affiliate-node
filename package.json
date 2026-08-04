@@ -33,8 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RideBuilder/Backend.git",
-    "directory": "Services/AffiliateNetwork/sdk/node"
+    "url": "git+https://github.com/RideBuilder/affiliate-node.git"
   },
   "publishConfig": {
     "access": "public"

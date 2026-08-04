@@ -7,7 +7,7 @@ import { RideBuilderClient, RideBuilderError } from "../dist/index.js";
 // Runs the shared, language-neutral fixtures in sdk/conformance/*.json against the Node client — the same
 // cases the .NET SDK runs — so both encode byte-for-byte the same wire contract.
 
-const CONFORMANCE_DIR = new URL("../../conformance/", import.meta.url);
+const CONFORMANCE_DIR = new URL("../conformance/", import.meta.url);
 
 function loadCases() {
   const dir = fileURLToPath(CONFORMANCE_DIR);
