@@ -25,10 +25,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      # OIDC trusted publishing needs npm >= 11.5.1 (newer than what setup-node bundles).
+      # OIDC trusted publishing needs a recent npm; latest npm requires Node 22+/24+.
       - run: npm install -g npm@latest
 
       - name: Verify tag matches version
