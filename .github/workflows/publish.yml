@@ -2,9 +2,10 @@ name: publish
 
 # Release flow: bump "version" in package.json, commit, then:
 #   git tag vX.Y.Z && git push origin vX.Y.Z
-# This builds, tests, and publishes to npm.
-# One-time setup: create an npm "Automation" token (bypasses 2FA) at npmjs.com → Access Tokens,
-# then add it as the repo secret NPM_TOKEN (Settings → Secrets and variables → Actions).
+# Publishes to npm via Trusted Publishing (OIDC) — no stored token, and it's exempt from the
+# account's publish-2FA requirement.
+# One-time setup: npmjs.com → package @ridebuilder/affiliate → Settings → Trusted Publisher →
+#   add a GitHub Actions publisher (owner: RideBuilder, repo: affiliate-node, workflow: publish.yml).
 
 on:
   push:
@@ -18,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # enables npm provenance (supply-chain attestation)
+      id-token: write   # OIDC: authenticates to npm AND signs provenance
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +28,10 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Verify tag matches package version
+      # OIDC trusted publishing needs npm >= 11.5.1 (newer than what setup-node bundles).
+      - run: npm install -g npm@latest
+
+      - name: Verify tag matches version
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           VER=$(node -p "require('./package.json').version")
@@ -36,6 +40,6 @@ jobs:
 
       - run: npm ci
       - run: npm test
+
+      # No NODE_AUTH_TOKEN — npm authenticates via the OIDC trusted publisher.
       - run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
