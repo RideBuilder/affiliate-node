@@ -44,12 +44,33 @@ export function getClickIdFromCookieHeader(cookieHeader: string | undefined): st
   return attribution ? attribution.click_id : null;
 }
 
+export const CLICK_ID_HEADER = "X-RideBuilder-Click-Id";
+
+// Read a validated click_id off a forwarding header (case-insensitive; default X-RideBuilder-Click-Id) —
+// the decoupled path, where a separate frontend forwards it on the checkout call. A forwarded header
+// carries no `ref`, so only the click_id shape is enforced.
+export function getClickIdFromHeaders(
+  headers: Record<string, string | string[] | undefined> | undefined,
+  name: string = CLICK_ID_HEADER,
+): string | null {
+  if (!headers) return null;
+  const target = name.toLowerCase();
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() !== target) continue;
+    const raw = headers[key];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    return isValidClickId(value) ? value : null;
+  }
+  return null;
+}
+
 // --- optional Express-style middleware ---
 
 interface CaptureRequestLike {
   url?: string;
   originalUrl?: string;
   query?: Record<string, unknown>;
+  headers?: Record<string, string | string[] | undefined>;
   [key: string]: unknown;
 }
 
@@ -59,7 +80,13 @@ export interface CaptureOptions {
 }
 
 // Reads click_id off the incoming request and stashes it on req[property] (default `ridebuilderClickId`).
-// Does not persist it — hand it to onCapture (or read req[property]) to bind it onto your cart/order.
+// Resolves in the order attribution survives: the landing URL, then a forwarded X-RideBuilder-Click-Id
+// header, then the `ridebuilder_attribution` cookie the browser snippet set — so a returning shopper is
+// re-hydrated on requests whose URL carries nothing.
+//
+// req[property] lives for ONE request. Bind the click_id onto your cart/order from onCapture (or read
+// req[property] during the same request); do NOT capture on the landing hit and expect it to still be
+// there when the shopper adds to cart. Send the value stored on your own order at checkout.
 export function capture(options: CaptureOptions = {}) {
   const property = options.property ?? "ridebuilderClickId";
   return function ridebuilderCapture(
@@ -74,6 +101,13 @@ export function capture(options: CaptureOptions = {}) {
     if (!clickId) {
       const raw = req.originalUrl ?? req.url;
       if (raw) clickId = getClickIdFromUrl(raw);
+    }
+    if (!clickId) {
+      clickId = getClickIdFromHeaders(req.headers);
+    }
+    if (!clickId) {
+      const cookieHeader = req.headers?.cookie;
+      if (typeof cookieHeader === "string") clickId = getClickIdFromCookieHeader(cookieHeader);
     }
     if (clickId) {
       req[property] = clickId;

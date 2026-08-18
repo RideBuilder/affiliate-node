@@ -18,19 +18,23 @@ Requires Node 18+ (uses the global `fetch`). Zero runtime dependencies.
 ## The pattern: capture at landing, bind to the order
 
 The `click_id` only reliably reaches checkout if you take it out of the browser early and put it
-on the cart/order. Capture it from the URL on landing, store it with the cart, and send it at
+on the cart/order. **Capture it and persist it in the same breath** — then send what you stored at
 purchase.
 
 ```ts
 import { capture, RideBuilderClient } from "@ridebuilder/affiliate";
 
-// 1. Capture on every request. Stashes a validated click_id on req.ridebuilderClickId.
-app.use(capture());
+// 1. Capture on every request, and bind it onto YOUR cart the moment it's seen. onCapture runs on
+//    the request that carried it.
+app.use(capture({
+  onCapture: async (clickId, req) => {
+    const cart = await carts.getOrCreate(req);
+    cart.ridebuilderClickId = clickId;   // your storage — this is what survives to checkout
+    await carts.save(cart);
+  },
+}));
 
-// 2. When the shopper adds to cart (or a session starts), persist it onto YOUR cart record:
-if (req.ridebuilderClickId) cart.ridebuilderClickId = req.ridebuilderClickId;
-
-// 3. At order time, send the postback from your backend.
+// 2. At order time, send what you stored.
 const rb = new RideBuilderClient({ apiKey: process.env.RIDEBUILDER_API_KEY! });
 
 await rb.reportCheckout({
@@ -41,7 +45,36 @@ await rb.reportCheckout({
 });
 ```
 
+`capture()` resolves a validated click_id in the order attribution actually survives:
+
+1. the **landing URL** (`?ref=ridebuilder&click_id=…`) — present only on the first hit,
+2. a forwarded **`X-RideBuilder-Click-Id` header** — the decoupled-frontend path,
+3. the **`ridebuilder_attribution` cookie** the browser snippet set — sent on every later request.
+
+> **`req.ridebuilderClickId` lives for one request.** It holds what was resolved on *that* request; it
+> is not a session store. Persist the value onto your own cart/order (as above) and read it back from
+> there at checkout. Don't capture on the landing request and expect it to still be on `req` when the
+> shopper adds to cart.
+
 Store the API key server-side (env/secrets) — never in frontend code.
+
+### Decoupled frontend (e.g. React) + separate Node backend
+
+If your frontend is separate from your API, the landing request never hits your backend. The browser
+**snippet** captures the `click_id` into a first-party cookie; get it to your backend one of two ways:
+
+```ts
+import { getClickIdFromCookieHeader, getClickIdFromHeaders } from "@ridebuilder/affiliate";
+
+// Same registrable domain — the cookie rides along; read it off the Cookie header:
+const clickId = getClickIdFromCookieHeader(req.headers.cookie);
+
+// Cross-domain / mobile — the frontend forwards it on the checkout call:
+const clickId = getClickIdFromHeaders(req.headers);   // default header: X-RideBuilder-Click-Id
+```
+
+Either way `reportCheckout` is unchanged. `capture()` already checks both, so if it is mounted you can
+just read `req.ridebuilderClickId`.
 
 ### Refunds
 
@@ -107,15 +140,18 @@ The SDK reports its own `type` (`node_sdk`), `version`, and default capabilities
 
 ## Capture options
 
-- `capture({ property, onCapture })` — Express-style middleware. `property` renames the request
-  field (default `ridebuilderClickId`); `onCapture(clickId, req)` runs when one is found (persist it
-  there if you prefer).
+- `capture({ property, onCapture })` — Express-style middleware. Resolves URL → forwarded header →
+  attribution cookie. `property` renames the request field (default `ridebuilderClickId`);
+  `onCapture(clickId, req)` runs when one is found — bind it to your cart/order there.
 - `getClickIdFromUrl(url)` / `getClickIdFromQuery(query)` — framework-free landing capture.
 - `getClickIdFromCookieHeader(cookieHeader)` — recover the click_id from the `ridebuilder_attribution`
   cookie the browser snippet set (the client-side path, for same-domain checkouts).
+- `getClickIdFromHeaders(headers, name = CLICK_ID_HEADER)` — a forwarded header (case-insensitive;
+  carries no `ref`, so only the click_id shape is checked).
 
 All capture helpers validate `ref === "ridebuilder"` and the UUID-v4 `click_id`, returning `null`
-otherwise — the same rules the browser snippet enforces.
+otherwise — the same rules the browser snippet enforces. None of them persist anything; binding is
+yours, and `req[property]` does not outlive the request.
 
 ## Client options
 

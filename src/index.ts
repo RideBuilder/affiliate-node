@@ -13,6 +13,8 @@ export {
   getClickIdFromSearchParams,
   getClickIdFromQuery,
   getClickIdFromCookieHeader,
+  getClickIdFromHeaders,
+  CLICK_ID_HEADER,
   capture,
 } from "./capture.js";
 export type { CaptureOptions } from "./capture.js";

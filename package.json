@@ -1,6 +1,6 @@
 {
   "name": "@ridebuilder/affiliate",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Server-side SDK for RideBuilder FirstParty affiliate tracking: capture click_id and send checkout/return postbacks.",
   "type": "module",
   "main": "./dist/index.js",

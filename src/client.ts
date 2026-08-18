@@ -56,9 +56,11 @@ export class RideBuilderError extends Error {
 const DEFAULT_BASE_URL = "https://api.ridebuilder.com/v1";
 const CURRENCY_RE = /^[A-Z]{3}$/;
 
-// Integration-protocol identity for this SDK. Keep SDK_VERSION in sync with package.json.
+// Integration-protocol identity for this SDK. SDK_VERSION must match package.json — it is what the
+// backend records for this integration. A guard test asserts the two agree, because they silently
+// drifted before (package 0.4.1 reported itself as 0.4.0 on every register/heartbeat).
 const SDK_TYPE = "node_sdk";
-const SDK_VERSION = "0.4.0";
+const SDK_VERSION = "0.5.0";
 const DEFAULT_CAPABILITIES = ["click_capture", "order_events", "refund_events"];
 
 function assertNonEmpty(value: string, field: string): void {
